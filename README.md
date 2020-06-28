@@ -8,6 +8,7 @@ https://drc10723.github.io/dharmendra-blog/
 
 # My Blog
 
-Hi, I am Dharmendra Choudhary. I am write blogs about Deep Learning, NLP and Computer Vision.
+Hi, I am Dharmendra Choudhary. I write blogs about Deep Learning, NLP and Computer Vision.
+
 
 _powered by [fastpages](https://github.com/fastai/fastpages)_
