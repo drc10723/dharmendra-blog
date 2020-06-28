@@ -6,7 +6,7 @@ categories: [BERT, NLP, deep learning]
 title: BERT Fine-Tuning on Quora Question Pairs
 ---
 
-![Photo by rawpixel on Unsplash](../images/2019_03_29_BERT_QQP/unsplash_transfer_learning.jpeg)
+![Photo by rawpixel on Unsplash](https://drc10723.github.io/dharmendra-blog/images/2019_03_29_BERT_QQP/unsplash_transfer_learning.jpeg)
 
 BERT (Bidirectional Encoder Representations from Transformers) has started a revolution in NLP with state of the art results in various tasks, including Question Answering, GLUE Benchmark, and others. People even referred to this as [the ImageNet moment of NLP](http://ruder.io/nlp-imagenet/). If you are not familiar with BERT, please read [The Illustrated BERT](http://jalammar.github.io/illustrated-bert/) and [BERT Paper](https://arxiv.org/abs/1810.04805).
 
@@ -95,7 +95,7 @@ run_classifier.file_based_convert_examples_to_features(train_examples,
 
 ## Creating Model
 
-![Sentence Pair Classification tasks in BERT paper](../images/2019_03_29_BERT_QQP/BERT_QQP.png)
+![Sentence Pair Classification tasks in BERT paper](https://drc10723.github.io/dharmendra-blog/images/2019_03_29_BERT_QQP/BERT_QQP.png)
 
 Given two questions, we need to predict duplicate or not. BERT paper suggests adding extra layers with softmax as the last layer on top of the BERT model for such kinds of classification tasks. We can create an instance of the BERT model as below.
 
