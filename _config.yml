@@ -41,6 +41,9 @@ minima:
   social_links:
     linkedin: dharmendra10723
     github: drc10723
+    email: dharmendra10723@gmail.com
+    twitter: drc10723
+    
 
 # Set this to true to get LaTeX math equation support
 use_math: true
