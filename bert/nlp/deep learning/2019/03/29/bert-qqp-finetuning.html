@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>BERT Fine-Tuning on Quora Question Pairs | Dharmendra Choudhary</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="BERT Fine-Tuning on Quora Question Pairs" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Start of Transfer Learning Era in Natural Language Processing" />
+<meta property="og:description" content="Start of Transfer Learning Era in Natural Language Processing" />
+<link rel="canonical" href="https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html" />
+<meta property="og:url" content="https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html" />
+<meta property="og:site_name" content="Dharmendra Choudhary" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-03-29T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"Start of Transfer Learning Era in Natural Language Processing","@type":"BlogPosting","headline":"BERT Fine-Tuning on Quora Question Pairs","dateModified":"2019-03-29T00:00:00-05:00","datePublished":"2019-03-29T00:00:00-05:00","url":"https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/dharmendra-blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://drc10723.github.io/dharmendra-blog/feed.xml" title="Dharmendra Choudhary" /><link rel="shortcut icon" type="image/x-icon" href="/dharmendra-blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>BERT Fine-Tuning on Quora Question Pairs | Dharmendra Choudhary</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="BERT Fine-Tuning on Quora Question Pairs" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Start of Transfer Learning Era in Natural Language Processing" />
+<meta property="og:description" content="Start of Transfer Learning Era in Natural Language Processing" />
+<link rel="canonical" href="https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html" />
+<meta property="og:url" content="https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html" />
+<meta property="og:site_name" content="Dharmendra Choudhary" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-03-29T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"Start of Transfer Learning Era in Natural Language Processing","@type":"BlogPosting","headline":"BERT Fine-Tuning on Quora Question Pairs","dateModified":"2019-03-29T00:00:00-05:00","datePublished":"2019-03-29T00:00:00-05:00","url":"https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://drc10723.github.io/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://drc10723.github.io/dharmendra-blog/feed.xml" title="Dharmendra Choudhary" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head><body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/dharmendra-blog/">Dharmendra Choudhary</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/dharmendra-blog/about/">About Me</a><a class="page-link" href="/dharmendra-blog/search/">Search</a><a class="page-link" href="/dharmendra-blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">BERT Fine-Tuning on Quora Question Pairs</h1><p class="page-description">Start of Transfer Learning Era in Natural Language Processing</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2019-03-29T00:00:00-05:00" itemprop="datePublished">
+        Mar 29, 2019
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      7 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/dharmendra-blog/categories/#BERT">BERT</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/dharmendra-blog/categories/#NLP">NLP</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/dharmendra-blog/categories/#deep learning">deep learning</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h1"><a href="#bert-fine-tuning-on-quora-questionpairs">BERT Fine-Tuning on Quora Question Pairs</a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#start-of-transfer-learning-era-in-natural-language-processing">Start of Transfer Learning Era in Natural Language Processing</a></li>
+<li class="toc-entry toc-h2"><a href="#setup">Setup</a></li>
+<li class="toc-entry toc-h2"><a href="#data-loading">Data Loading</a></li>
+<li class="toc-entry toc-h2"><a href="#converting-to-features">Converting to Features</a></li>
+<li class="toc-entry toc-h2"><a href="#creating-model">Creating Model</a></li>
+<li class="toc-entry toc-h2"><a href="#optimization-and-evaluation-metrics">Optimization and Evaluation Metrics</a></li>
+<li class="toc-entry toc-h2"><a href="#creating-tpuestimator">Creating TPUEstimator</a></li>
+<li class="toc-entry toc-h2"><a href="#fine-tuning-training">Fine-Tuning Training</a></li>
+<li class="toc-entry toc-h2"><a href="#evaluation">Evaluation</a></li>
+<li class="toc-entry toc-h2"><a href="#summary">Summary</a></li>
+<li class="toc-entry toc-h2"><a href="#references">References</a></li>
+</ul>
+</li>
+</ul><h1 id="bert-fine-tuning-on-quora-questionpairs">
+<a class="anchor" href="#bert-fine-tuning-on-quora-questionpairs" aria-hidden="true"><span class="octicon octicon-link"></span></a>BERT Fine-Tuning on Quora Question Pairs</h1>
+
+<h2 id="start-of-transfer-learning-era-in-natural-language-processing">
+<a class="anchor" href="#start-of-transfer-learning-era-in-natural-language-processing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Start of Transfer Learning Era in Natural Language Processing</h2>
+
+<p><img src="../images/BERT_QQP/unsplash_transfer_learning.jpeg" alt="Photo by rawpixel on Unsplash"></p>
+
+<p>BERT (Bidirectional Encoder Representations from Transformers) has started a revolution in NLP with state of the art results in various tasks, including Question Answering, GLUE Benchmark, and others. People even referred to this as <a href="http://ruder.io/nlp-imagenet/">the ImageNet moment of NLP</a>. If you are not familiar with BERT, please read <a href="http://jalammar.github.io/illustrated-bert/">The Illustrated BERT</a> and <a href="https://arxiv.org/abs/1810.04805">BERT Paper</a>.</p>
+
+<p>In this blog, we will reproduce state of the art results on the Quora Question Pairs task using a pre-trained BERT model. In this task, we need to predict if the given question pair are similar or not.</p>
+
+<h2 id="setup">
+<a class="anchor" href="#setup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setup</h2>
+
+<p>We will use Google Colab TPU runtime, which requires a GCS (Google Cloud Storage) bucket for saving models and output predictions. If you don’t want to create a storage bucket, you can use GPU runtime. You can follow <a href="https://colab.research.google.com/drive/1dCbs4Th3hzJfWEe6KT-stIVDMqHZSA5V">this collab notebook</a> or the copy of the notebook in <a href="https://github.com/drc10723/bert_quora_question_pairs">this Github repository</a>. Code snippets used in this blog might be different from the notebook for explanation purposes.</p>
+
+<p>Let’s start by cloning <a href="https://github.com/google-research/bert">the BERT repository</a>. Alternative you can install bert-tensorflow using pip. I would recommend using the GitHub repo for better understanding. Pre-trained models are available in the GCS bucket at gs://cloud-tpu-checkpoints/bert.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># cloning bert github repo
+# !git clone -q https://github.com/google-research/bert.git
+</span>
+<span class="c1"># add bert to sys.path  
+</span><span class="k">if</span> <span class="ow">not</span> <span class="s">'bert'</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+  <span class="n">sys</span><span class="o">.</span><span class="n">path</span> <span class="o">+=</span> <span class="p">[</span><span class="s">'bert'</span><span class="p">]</span>
+  
+<span class="c1"># Instead of cloning you can install via pip also
+# !pip install bert-tensorflow
+</span>
+<span class="c1"># We will use base uncased model, you can give try with large models
+</span><span class="n">PRETRAINED_DIR</span> <span class="o">=</span> <span class="s">'gs://cloud-tpu-checkpoints/bert/'</span><span class="o">+</span><span class="s">'uncased_L-12_H-768_A-12'</span>
+</code></pre></div></div>
+
+<p>Quora Question Pairs dataset is part of GLUE benchmark tasks. You can download the dataset from <a href="https://gluebenchmark.com/tasks">GLUE</a> or <a href="https://www.kaggle.com/c/quora-question-pairs/data">Kaggle Challenge</a>.</p>
+
+<h2 id="data-loading">
+<a class="anchor" href="#data-loading" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data Loading</h2>
+
+<p>In Quora question pairs task, we need to predict if two given questions are similar or not. Similar pairs are labeled as 1 and non-duplicate as 0.
+We will convert train, dev and test files to the list of InputExamples. Each InputExample has question1 as text_a, question2 as text_b, label, and a unique id. In the case of the test set, we will set the label to 0 for all InputExamples.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Train and Dev tsv file contains 6 tab seperated value
+# We will use question1 as text_a, question2 as text_b
+# and is_duplicate as label
+# 'id', 'qid1', 'qid2', 'question1', 'question2', 'is_duplicate'
+</span><span class="n">guid</span> <span class="o">=</span> <span class="s">"train_1"</span>
+<span class="n">text_a</span> <span class="o">=</span> <span class="s">"How can I recover old gmail account?"</span>
+<span class="n">text_b</span> <span class="o">=</span> <span class="s">"How can I access my old gmail account?"</span>
+<span class="n">label</span> <span class="o">=</span>  <span class="mi">1</span>
+<span class="c1"># creating InputExample
+</span><span class="n">example</span> <span class="o">=</span> <span class="n">run_classifier</span><span class="o">.</span><span class="n">InputExample</span><span class="p">(</span><span class="n">guid</span><span class="o">=</span><span class="n">guid</span><span class="p">,</span> <span class="n">text_a</span><span class="o">=</span><span class="n">text_a</span><span class="p">,</span>
+                                      <span class="n">text_b</span><span class="o">=</span><span class="n">text_b</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h2 id="converting-to-features">
+<a class="anchor" href="#converting-to-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Converting to Features</h2>
+
+<p>BERT uses word-piece tokenization for converting text to tokens. Tokenizer will also perform text normalization like convert all whitespace characters to spaces, lowercase the input ( uncased model) and strip out accent markers.
+Let’s take an example to understand in more details.</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>text_a: How can I recover old gmail account?
+text_b: How can I access my old gmail account?
+
+tokens: [CLS] how can i recover old gma ##il account ?
+        [SEP] how can i access my old gma ##il account ? [SEP]
+input_ids: 101 2129 2064 1045 8980 2214 20917 4014 4070 1029
+           102 2129 2064 1045 3229 2026 2214 20917 4014 4070 1029 102
+input_mask: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  
+segment_ids: 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1
+label: 1
+</code></pre></div></div>
+
+<p>As above both questions will be tokenized and will add [CLS] as first token and [SEP] token after each question tokens. Segment ids will be 0 for question1 tokens and 1 for question2 tokens. Finally pad input_ids, input_mask, and segment_ids till max sequence length. We have used the max sequence length as 200. Zero in input_mask will represent padding.
+Let’s create InputFeatures for the train set. We will save InputFeatures in the TF_Record file, which will help us in better batch loading and reduce out of memory errors.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Instantiate an instance of QQPProcessor and tokenizer
+</span><span class="n">processor</span> <span class="o">=</span> <span class="n">QQPProcessor</span><span class="p">()</span>
+<span class="n">label_list</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">get_labels</span><span class="p">()</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenization</span><span class="o">.</span><span class="n">FullTokenizer</span><span class="p">(</span><span class="n">vocab_file</span><span class="o">=</span><span class="n">VOCAB_FILE</span><span class="p">,</span>
+                                       <span class="n">do_lower_case</span><span class="o">=</span><span class="n">DO_LOWER_CASE</span><span class="p">)</span>
+
+<span class="n">TRAIN_TF_RECORD</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s">"train.tf_record"</span><span class="p">)</span>
+<span class="c1"># getting list of train InputExample
+</span><span class="n">train_examples</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">get_train_examples</span><span class="p">(</span><span class="n">TASK_DATA_DIR</span><span class="p">)</span>
+<span class="c1"># converting train examples to features and saving as TF Record
+</span><span class="n">run_classifier</span><span class="o">.</span><span class="n">file_based_convert_examples_to_features</span><span class="p">(</span><span class="n">train_examples</span><span class="p">,</span>
+                                                       <span class="n">label_list</span><span class="p">,</span>
+                                                       <span class="n">MAX_SEQ_LENGTH</span><span class="p">,</span>
+                                                       <span class="n">tokenizer</span><span class="p">,</span>
+                                                       <span class="n">TRAIN_TF_RECORD</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="creating-model">
+<a class="anchor" href="#creating-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Creating Model</h2>
+
+<p><img src="../images/BERT_QQP/BERT_QQP.png" alt="Sentence Pair Classification tasks in BERT paper"></p>
+
+<p>Given two questions, we need to predict duplicate or not. BERT paper suggests adding extra layers with softmax as the last layer on top of the BERT model for such kinds of classification tasks. We can create an instance of the BERT model as below.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Bert model instant
+</span><span class="n">model</span> <span class="o">=</span> <span class="n">modeling</span><span class="o">.</span><span class="n">BertModel</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">bert_config</span><span class="p">,</span>
+                           <span class="n">is_training</span><span class="o">=</span><span class="n">is_training</span><span class="p">,</span>
+                           <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+                           <span class="n">input_mask</span><span class="o">=</span><span class="n">input_mask</span><span class="p">,</span>
+                           <span class="n">token_type_ids</span><span class="o">=</span><span class="n">segment_ids</span><span class="p">,</span>
+                           <span class="n">use_one_hot_embeddings</span><span class="o">=</span><span class="n">use_one_hot_embeddings</span><span class="p">)</span>
+<span class="c1"># Getting output for last layer of BERT
+</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_pooled_output</span><span class="p">()</span>
+<span class="c1"># output size for last layer
+</span><span class="n">hidden_size</span> <span class="o">=</span> <span class="n">output_layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+</code></pre></div></div>
+
+<p>Then we will add an NN layer with output size equal to the number of labels ( 2 in our task). For reducing overfitting, we can add the dropout layer. Finally, a softmax layer will give us probabilities for class labels. We will calculate cross entropy loss from given labels and predicted probabilities.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">output_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span>
+    <span class="s">"output_weights"</span><span class="p">,</span> <span class="p">[</span><span class="n">num_labels</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">],</span>
+    <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal_initializer</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="mf">0.02</span><span class="p">))</span>
+
+<span class="n">output_bias</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span>
+    <span class="s">"output_bias"</span><span class="p">,</span> <span class="p">[</span><span class="n">num_labels</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros_initializer</span><span class="p">())</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s">"loss"</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">is_training</span><span class="p">:</span> <span class="c1"># 0.1 dropout
+</span>    <span class="n">output_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">output_layer</span><span class="p">,</span> <span class="n">keep_prob</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+
+  <span class="c1"># Calculate prediction probabilites
+</span>  <span class="n">logits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">output_layer</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">,</span> <span class="n">transpose_b</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="n">logits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">bias_add</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">output_bias</span><span class="p">)</span>
+  <span class="n">probabilities</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+  <span class="n">log_probs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+  <span class="c1"># Calculate loss
+</span>  <span class="n">one_hot_labels</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">num_labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+  <span class="n">per_example_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">one_hot_labels</span> <span class="o">*</span> <span class="n">log_probs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+  <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">per_example_loss</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="optimization-and-evaluation-metrics">
+<a class="anchor" href="#optimization-and-evaluation-metrics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Optimization and Evaluation Metrics</h2>
+
+<p>We will create a TPUEstimator instance for training, evaluation, and prediction, which requires model_fn. In this model_fn, we will define the optimization step for training, metrics for evaluation and loading pre-trained BERT model. BERT pre-training uses Adam with L2 regularization/ weight decay so that we will follow the same.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># learning rate 2e-5
+# num_train_steps = num_epoch * num_train_batches
+# num_warmup_steps = 0.1 * num_train_steps
+# defining optimizar function
+</span><span class="n">train_op</span> <span class="o">=</span> <span class="n">optimization</span><span class="o">.</span><span class="n">create_optimizer</span><span class="p">(</span>
+    <span class="n">total_loss</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">num_train_steps</span><span class="p">,</span> <span class="n">num_warmup_steps</span><span class="p">,</span> <span class="n">use_tpu</span><span class="p">)</span>
+
+<span class="c1"># Training estimator spec
+</span><span class="n">output_spec</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">TPUEstimatorSpec</span><span class="p">(</span>
+  <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+  <span class="n">loss</span><span class="o">=</span><span class="n">total_loss</span><span class="p">,</span>
+  <span class="n">train_op</span><span class="o">=</span><span class="n">train_op</span><span class="p">,</span>
+  <span class="n">scaffold_fn</span><span class="o">=</span><span class="n">scaffold_fn</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The initial warmup learning rate will be one-tenth of the learning rate. TPUEstimator spec will have optimization step and loss for training, metrics for evaluation and probabilities for prediction. We will calculate the following evaluation metrics:- Accuracy, Loss, F1, Precision, Recall, and AUC score.</p>
+
+<h2 id="creating-tpuestimator">
+<a class="anchor" href="#creating-tpuestimator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Creating TPUEstimator</h2>
+
+<p>For creating TPUEstimator, we will need model function, batch sizes ( 32, 8, 8 respectively for train, eval and predict) and config. If you are not using TPU runtime, you can set tpu_resolver to none and USE_TPU to false and TPUEstimator will fallback to GPU or CPU. Output directory should be a GCS bucket for TPU runtime. After every 1000 steps, we will save the model checkpoint.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">TPU_ADDRESS</span> <span class="o">=</span> <span class="s">'grpc://'</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">'COLAB_TPU_ADDR'</span><span class="p">]</span>
+<span class="c1"># Define TPU configs
+</span><span class="n">tpu_resolver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">cluster_resolver</span><span class="o">.</span><span class="n">TPUClusterResolver</span><span class="p">(</span><span class="n">TPU_ADDRESS</span><span class="p">)</span>
+<span class="n">run_config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">RunConfig</span><span class="p">(</span>
+    <span class="n">cluster</span><span class="o">=</span><span class="n">tpu_resolver</span><span class="p">,</span>
+    <span class="n">model_dir</span><span class="o">=</span><span class="n">OUTPUT_DIR</span><span class="p">,</span>
+    <span class="n">save_checkpoints_steps</span><span class="o">=</span><span class="n">SAVE_CHECKPOINTS_STEPS</span><span class="p">,</span>
+    <span class="n">tpu_config</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">TPUConfig</span><span class="p">(</span>
+        <span class="n">iterations_per_loop</span><span class="o">=</span><span class="n">ITERATIONS_PER_LOOP</span><span class="p">,</span>
+        <span class="n">num_shards</span><span class="o">=</span><span class="n">NUM_TPU_CORES</span><span class="p">,</span>
+        <span class="n">per_host_input_for_training</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">InputPipelineConfig</span><span class="o">.</span><span class="n">PER_HOST_V2</span><span class="p">))</span>
+
+<span class="c1"># Defining TPU Estimator
+</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">contrib</span><span class="o">.</span><span class="n">tpu</span><span class="o">.</span><span class="n">TPUEstimator</span><span class="p">(</span>
+    <span class="n">use_tpu</span><span class="o">=</span><span class="n">USE_TPU</span><span class="p">,</span>
+    <span class="n">model_fn</span><span class="o">=</span><span class="n">model_fn</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">run_config</span><span class="p">,</span>
+    <span class="n">train_batch_size</span><span class="o">=</span><span class="n">TRAIN_BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">eval_batch_size</span><span class="o">=</span><span class="n">EVAL_BATCH_SIZE</span><span class="p">,</span>
+    <span class="n">predict_batch_size</span><span class="o">=</span><span class="n">PREDICT_BATCH_SIZE</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="fine-tuning-training">
+<a class="anchor" href="#fine-tuning-training" aria-hidden="true"><span class="octicon octicon-link"></span></a>Fine-Tuning Training</h2>
+
+<p>For training, we need to create batches of input features. We will define an input function that will load data from the TF record file and return a batch of data generatively. We will fine-tune for three epochs. On TPU run-type, It will take about an hour.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># we are using `file_based_input_fn_builder` for creating
+# input function from TF_RECORD file
+# same function can be used for creating input function for dev and test file
+</span><span class="n">train_input_fn</span> <span class="o">=</span> <span class="n">run_classifier</span><span class="o">.</span><span class="n">file_based_input_fn_builder</span><span class="p">(</span>
+                                            <span class="n">TRAIN_TF_RECORD</span><span class="p">,</span>
+                                            <span class="n">seq_length</span><span class="o">=</span><span class="n">MAX_SEQ_LENGTH</span><span class="p">,</span>
+                                            <span class="n">is_training</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                            <span class="n">drop_remainder</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c1"># finetuning model on QQP dataset
+</span><span class="n">estimator</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">input_fn</span><span class="o">=</span><span class="n">train_input_fn</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="n">num_train_steps</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="evaluation">
+<a class="anchor" href="#evaluation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Evaluation</h2>
+
+<p>Using Estimator’s evaluate API, we can get evaluation metrics for both train and dev set.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metrics</th>
+      <th>Train Set</th>
+      <th>Dev Set</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Loss</td>
+      <td>0.150</td>
+      <td>0.497</td>
+    </tr>
+    <tr>
+      <td>Accuracy</td>
+      <td>0.969</td>
+      <td>0.907</td>
+    </tr>
+    <tr>
+      <td>F1</td>
+      <td>0.959</td>
+      <td>0.875</td>
+    </tr>
+    <tr>
+      <td>AUC</td>
+      <td>0.969</td>
+      <td>0.902</td>
+    </tr>
+    <tr>
+      <td>Precision</td>
+      <td>0.949</td>
+      <td>0.864</td>
+    </tr>
+    <tr>
+      <td>Recall</td>
+      <td>0.969</td>
+      <td>0.886</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>We are able to achieve 87.5 F1 and 90.7 % accuracy on dev set. We can further improve using the BERT large model and hyperparameter tuning. Using estimator’s predict API, we can predict for test set and custom examples. We haven’t submitted the test set for evaluation, but the BERT large model has 72.1 F1 and 89.3 % accuracy on GLUE leaderboard. Due to the different distribution of dev and test set, there is a huge difference in F1 score for both.</p>
+
+<h2 id="summary">
+<a class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary</h2>
+
+<p>Quora question pairs train set contained around 400K examples, but we can get pretty good results for the dataset (for example MRPC task in GLUE) with less than 5K examples also. BERT, OpenAI GPT, ULMFiT and many more to come will enable us to create good NLP models with few training examples.
+In the end, I would recommend going through <a href="https://github.com/google-research/bert">BERT Github repository</a> and medium blog <a href="https://medium.com/dissecting-bert">dissecting-bert</a> for in-depth understanding.</p>
+
+<h2 id="references">
+<a class="anchor" href="#references" aria-hidden="true"><span class="octicon octicon-link"></span></a>References</h2>
+
+<ul>
+  <li><a href="https://github.com/google-research/bert">Google BERT Github Repo</a></li>
+  <li><a href="https://colab.research.google.com/github/tensorflow/tpu/blob/master/tools/colab/bert_finetuning_with_cloud_tpus.ipynb#scrollTo=RRu1aKO1D7-Z45">BERT Finetuning with TPUs</a></li>
+</ul>
+
+  </div><a class="u-url" href="/dharmendra-blog/bert/nlp/deep%20learning/2019/03/29/bert-qqp-finetuning.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/dharmendra-blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/dharmendra-blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/dharmendra-blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Blog on NLP and Computer Vision</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/drc10723" title="drc10723"><svg class="svg-icon grey"><use xlink:href="/dharmendra-blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/dharmendra10723" title="dharmendra10723"><svg class="svg-icon grey"><use xlink:href="/dharmendra-blog/assets/minima-social-icons.svg#linkedin"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
