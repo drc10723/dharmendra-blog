@@ -5,9 +5,6 @@ description: Start of Transfer Learning Era in Natural Language Processing
 categories: [BERT, NLP, deep learning]
 title: BERT Fine-Tuning on Quora Question Pairs
 ---
-# BERT Fine-Tuning on Quora Question Pairs
-
-## Start of Transfer Learning Era in Natural Language Processing
 
 ![Photo by rawpixel on Unsplash](../images/BERT_QQP/unsplash_transfer_learning.jpeg)
 
